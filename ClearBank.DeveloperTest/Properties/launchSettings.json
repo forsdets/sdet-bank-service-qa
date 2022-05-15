@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ClearBank.DeveloperTest": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

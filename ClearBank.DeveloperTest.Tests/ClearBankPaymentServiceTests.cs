@@ -10,12 +10,32 @@ namespace ClearBank.DeveloperTest.Tests
 {
     public class ClearBankPaymentServiceTests
     {
+
+        [Fact]
+        public void TestAccountBasedOnDataStoreTypeNonBackup()
+        {
+            //Given mock
+            var mockConfig = new Mock<IConfiguration>();
+            //And set the payment service request
+            var makePaymentRequest = new MakePaymentRequest
+            {
+                PaymentScheme = PaymentScheme.Bacs
+            };
+
+            //When
+            var paymentService = new PaymentService(mockConfig.Object);
+            var accountNonBackup = paymentService.GetAccountBasedOnDataStoreType(makePaymentRequest, "NonBackup");
+
+            //Then
+            accountNonBackup.Should().NotBeNull();
+        }
+
         [Fact]
         public void TestGetAccountBasedOnDataStoreTypeBackup()
         {
             //Given mock
             var mockConfig = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Bacs
@@ -29,31 +49,13 @@ namespace ClearBank.DeveloperTest.Tests
             accountBackup.Should().NotBeNull();
         }
 
-        [Fact]
-        public void TestAccountBasedOnDataStoreTypeNonBackup()
-        {
-            //Given
-            var configuration = new Mock<IConfiguration>();
-            //And set the payment service
-            var makePaymentRequest = new MakePaymentRequest
-            {
-                PaymentScheme = PaymentScheme.Bacs
-            };
-
-            //When
-            var paymentService = new PaymentService(configuration.Object);
-            var accountNonBackup = paymentService.GetAccountBasedOnDataStoreType(makePaymentRequest, "NonBackup");
-
-            //Then
-            accountNonBackup.Should().NotBeNull();
-        }
 
         [Fact]
-        public void TestMakePaymentResultAccountNull()
+        public void TestPaymentResultWithNullAccount()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Bacs
@@ -62,18 +64,18 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestMakePaymentResultBacs()
+        public void TestPaymentResultForBacsPaymentSchemeWithAllowedPaymentSchemesBacs()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Bacs
@@ -85,18 +87,18 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(true);
         }
 
         [Fact]
-        public void TestMakePaymentResultBacsAccountNonBacs()
+        public void TestPaymentResultForBacsPaymentSchemeWithAllowedPaymentSchemesChaps()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Bacs
@@ -108,47 +110,45 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestMakePaymentResultFasterPaymentsSchemeAndAccountBalancegreaterThanRequest()
+        public void TestPaymentResultForBacsPaymentSchemeWithAllowedPaymentSchemesFasterPayments()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
-                PaymentScheme = PaymentScheme.FasterPayments,
-                Amount = 10
+                PaymentScheme = PaymentScheme.Bacs
             };
             Account account = new Account
             {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
-                Balance = 100
+                AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments
             };
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
-            result.Success.Should().Be(true);
+            result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestMakePaymentResultFasterPaymentsSchemAndAccountBalanceLessThanRequest()
+        public void TestPaymentResultForFasterPaymentsSchemeAndAccountBalancegreaterThanRequest()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.FasterPayments,
-                Amount = 100
+                Amount = 5
             };
             Account account = new Account
             {
@@ -158,17 +158,18 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
-            result.Success.Should().Be(false);
+            result.Success.Should().Be(true);
         }
+
         [Fact]
-        public void TestMakePaymentResultForFasterPaymentsSchemeAsNonFasterPaymentsAndAccountBalanceGreaterThanRequest()
+        public void TestPaymentResultForFasterPaymentsSchemAndAccountBalanceLessThanRequest()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.FasterPayments,
@@ -176,28 +177,52 @@ namespace ClearBank.DeveloperTest.Tests
             };
             Account account = new Account
             {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
-                Balance = 100
+                AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
+                Balance = 5
             };
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
+
+            //Then
+            result.Success.Should().Be(false);
+        }
+        [Fact]
+        public void TestPaymentResultForFasterPaymentsSchemeAsNonFasterPaymentsAndAccountBalanceGreaterThanRequest()
+        {
+            //Given mock
+            var configuration = new Mock<IConfiguration>();
+            //And set the payment service request
+            var makePaymentRequest = new MakePaymentRequest
+            {
+                PaymentScheme = PaymentScheme.FasterPayments,
+                Amount = 20
+            };
+            Account account = new Account
+            {
+                AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
+                Balance = 200
+            };
+
+            //When
+            var paymentService = new PaymentService(configuration.Object);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestMakePaymentResultChapsAccountChapsAndAccountStatusLive()
+        public void TestPaymentResultForChapsAccountWithChapsPaymentSchemeAndAccountStatusLive()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10
+                Amount = 20
             };
             Account account = new Account
             {
@@ -207,22 +232,22 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(true);
         }
 
         [Fact]
-        public void TestMakePaymentResultChapsAccountNonChapsAndAccountStatusLive()
+        public void TestPaymentResultForChapsAccountWithNonChapsPaymentSchemeAndAccountStatusLive()
         {
             //Given
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10
+                Amount = 20
             };
             Account account = new Account
             {
@@ -232,22 +257,22 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestMakePaymentResultChapsAccountChapsAndAccountStatusNonLive()
+        public void TestPaymentResultForChapsAccountWithChapsPaymentSchemeAndAccountStatusNonLive()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10
+                Amount = 20
             };
             Account account = new Account
             {
@@ -257,22 +282,47 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(configuration.Object);
-            var result = paymentService.GetMakePaymentResult(makePaymentRequest, account);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
 
             //Then
             result.Success.Should().Be(false);
         }
 
         [Fact]
-        public void TestUpdateAccountMakePaymentResultFailure()
+        public void TestPaymentResultForChapsAccountWithChapsPaymentSchemeAndAccountStatuInboundPaymentsOnly()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10                
+                Amount = 20
+            };
+            Account account = new Account
+            {
+                AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
+                Status = AccountStatus.InboundPaymentsOnly
+            };
+
+            //When
+            var paymentService = new PaymentService(configuration.Object);
+            var result = paymentService.GetPaymentResult(makePaymentRequest, account);
+
+            //Then
+            result.Success.Should().Be(false);
+        }
+
+        [Fact]
+        public void TestUpdateAccountWithPaymentResultFailure()
+        {
+            //Given mock
+            var configuration = new Mock<IConfiguration>();
+            //And set the payment service request
+            var makePaymentRequest = new MakePaymentRequest
+            {
+                PaymentScheme = PaymentScheme.Chaps,
+                Amount = 20                
             };
             Account account = new Account
             {
@@ -285,8 +335,8 @@ namespace ClearBank.DeveloperTest.Tests
             };
 
             //When
-            var ps = new PaymentService(configuration.Object);
-            Action act = () => ps.UpdateAccount(makePaymentRequest, "Backup", account, null);
+            var paymentService = new PaymentService(configuration.Object);
+            Action act = () => paymentService.UpdateAccount(makePaymentRequest, "Backup", account, null);
 
             //Then
             act.Should().Throw<InvalidOperationException>()
@@ -294,20 +344,19 @@ namespace ClearBank.DeveloperTest.Tests
         }
 
         [Fact]
-        public void TestUpdateAccountMakePaymentResultSuccess()
+        public void TestUpdateAccountWithPaymentResultSuccess()
         {
             //Given mock
             var configuration = new Mock<IConfiguration>();
-            //And set the payment service
+            //And set the payment service request
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10
+                Amount = 20
             };
             Account account = new Account
             {
                 AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
-                Status = AccountStatus.Disabled
             };
             var makePaymentResult = new MakePaymentResult()
             {
@@ -334,7 +383,7 @@ namespace ClearBank.DeveloperTest.Tests
             var makePaymentRequest = new MakePaymentRequest
             {
                 PaymentScheme = PaymentScheme.Chaps,
-                Amount = 10
+                Amount = 20
             };
 
             //When

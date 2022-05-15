@@ -43,36 +43,29 @@ namespace ClearBank.DeveloperTest.Services
             }
         }
 
-        internal MakePaymentResult GetMakePaymentResult(MakePaymentRequest request, Account account)
+        internal MakePaymentResult GetPaymentResult(MakePaymentRequest request, Account account)
         {
             var result = new MakePaymentResult();
-            if (account == null)
-            {
-                result.Success = false;
-                return result;
-            }
-
+            
             switch (request.PaymentScheme)
             {
-                case PaymentScheme.Bacs:
-                    if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-                    break;
-
                 case PaymentScheme.FasterPayments:
-                    if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments)
+                    if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments)
                         || account.Balance < request.Amount)
                     {
                         result.Success = false;
                         return result;
                     }
                     break;
-
+                case PaymentScheme.Bacs:
+                    if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
+                    {
+                        result.Success = false;
+                        return result;
+                    }
+                    break;
                 case PaymentScheme.Chaps:
-                    if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps) ||
+                    if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps) ||
                         account.Status != AccountStatus.Live)
                     {
                         result.Success = false;
@@ -102,7 +95,7 @@ namespace ClearBank.DeveloperTest.Services
 
             var account = GetAccountBasedOnDataStoreType(request, dataStoreType);
 
-            MakePaymentResult result = GetMakePaymentResult(request, account);
+            MakePaymentResult result = GetPaymentResult(request, account);
 
             UpdateAccount(request, dataStoreType, account, result);
 
