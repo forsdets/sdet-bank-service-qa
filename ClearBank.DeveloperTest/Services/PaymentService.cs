@@ -17,13 +17,13 @@ namespace ClearBank.DeveloperTest.Services
             _configuration = configuration;
         }
 
-        internal void UpdateAccount(MakePaymentRequest request, string dataStoreType, Account account, MakePaymentResult result)
+        internal void UpdateAccount(MakePaymentRequest paymentRequest, string dataStoreType, Account account, MakePaymentResult paymentResult)
         {
             try
             {
-                if (result.Success)
+                if (paymentResult.Success)
                 {
-                    account.Balance -= request.Amount;
+                    account.Balance -= paymentRequest.Amount;
 
                     if (dataStoreType == "Backup")
                     {
@@ -43,56 +43,56 @@ namespace ClearBank.DeveloperTest.Services
             }
         }
 
-        internal MakePaymentResult GetPaymentResult(MakePaymentRequest request, Account account)
+        internal MakePaymentResult GetPaymentResult(MakePaymentRequest paymentRequest, Account account)
         {
-            var result = new MakePaymentResult();
+            var paymentResult = new MakePaymentResult();
             
-            switch (request.PaymentScheme)
+            switch (paymentRequest.PaymentScheme)
             {
                 case PaymentScheme.FasterPayments:
                     if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments)
-                        || account.Balance < request.Amount)
+                        || account.Balance < paymentRequest.Amount)
                     {
-                        result.Success = false;
-                        return result;
+                        paymentResult.Success = false;
+                        return paymentResult;
                     }
                     break;
                 case PaymentScheme.Bacs:
                     if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
                     {
-                        result.Success = false;
-                        return result;
+                        paymentResult.Success = false;
+                        return paymentResult;
                     }
                     break;
                 case PaymentScheme.Chaps:
                     if (account == null || !account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps) ||
                         account.Status != AccountStatus.Live)
                     {
-                        result.Success = false;
-                        return result;
+                        paymentResult.Success = false;
+                        return paymentResult;
                     }
                     break;
             }
-            return result;
+            return paymentResult;
         }
 
         
-        public Account GetAccountTypeBasedOnDataStoreType(MakePaymentRequest request, string dataStoreType)
+        public Account GetDebtorAccountBasedOnDataStoreType(MakePaymentRequest paymentRequest, string dataStoreType)
         {
             if (dataStoreType == "Backup")
             {
                 var backupAccountDataStore = new BackupAccountDataStore();
-                return backupAccountDataStore.GetAccount(request.DebtorAccountNumber);
+                return backupAccountDataStore.GetAccount(paymentRequest.DebtorAccountNumber);
             }
 
             var accountDataStore = new AccountDataStore();
-            return accountDataStore.GetAccount(request.DebtorAccountNumber);
+            return accountDataStore.GetAccount(paymentRequest.DebtorAccountNumber);
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest paymentRequest)
         {
             var dataStoreType= _configuration.GetValue<string>("DataStoreType");
-            var accountType = GetAccountTypeBasedOnDataStoreType(paymentRequest, dataStoreType);
+            var accountType = GetDebtorAccountBasedOnDataStoreType(paymentRequest, dataStoreType);
             MakePaymentResult paymentResult = GetPaymentResult(paymentRequest, accountType);
             UpdateAccount(paymentRequest, dataStoreType, accountType, paymentResult);
 
