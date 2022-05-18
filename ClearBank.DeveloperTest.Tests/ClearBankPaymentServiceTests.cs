@@ -24,7 +24,7 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When
             var paymentService = new PaymentService(mockConfig.Object);
-            var accountNonBackup = paymentService.GetAccountBasedOnDataStoreType(makePaymentRequest, "NonBackup");
+            var accountNonBackup = paymentService.GetAccountTypeBasedOnDataStoreType(makePaymentRequest, "NonBackup");
 
             //Then
             accountNonBackup.Should().NotBeNull();
@@ -43,7 +43,7 @@ namespace ClearBank.DeveloperTest.Tests
 
             //When 
             var paymentService = new PaymentService(mockConfig.Object);
-            var accountBackup = paymentService.GetAccountBasedOnDataStoreType(makePaymentRequest, "Backup");
+            var accountBackup = paymentService.GetAccountTypeBasedOnDataStoreType(makePaymentRequest, "Backup");
 
             //Then
             accountBackup.Should().NotBeNull();

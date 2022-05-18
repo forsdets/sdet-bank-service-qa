@@ -5,6 +5,6 @@ namespace ClearBank.DeveloperTest.Services
     public interface IPaymentService
     {
         MakePaymentResult MakePayment(MakePaymentRequest request);
-        Account GetAccountBasedOnDataStoreType(MakePaymentRequest request, string dataStoreType);
+        Account GetAccountTypeBasedOnDataStoreType(MakePaymentRequest request, string dataStoreType);
     }
 }
